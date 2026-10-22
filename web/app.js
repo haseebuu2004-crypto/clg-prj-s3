@@ -5,6 +5,7 @@ let page = 'dashboard';
 let matchMode = 'direct';
 let sessionFilter = 'all';
 let editingProfile = false;
+let mobileMenuOpen = false;
 let toastTimer;
 
 const state = loadState();
@@ -100,6 +101,21 @@ function setToast(message) {
   toast.classList.add('show');
   clearTimeout(toastTimer);
   toastTimer = setTimeout(() => toast.classList.remove('show'), 3200);
+}
+function setMobileMenuOpen(open, restoreFocus = true) {
+  mobileMenuOpen = open;
+  const layer = document.getElementById('mobile-menu-layer');
+  const toggle = document.querySelector('.mobile-menu-toggle');
+  if (!layer || !toggle) return;
+  layer.hidden = !open;
+  document.body.classList.toggle('menu-open', open);
+  toggle.setAttribute('aria-expanded', String(open));
+  toggle.setAttribute('aria-label', open ? 'Close navigation menu' : 'Open navigation menu');
+  if (open) {
+    requestAnimationFrame(() => layer.querySelector('.mobile-menu-items [data-page].active')?.focus());
+  } else if (restoreFocus) {
+    toggle.focus({ preventScroll: true });
+  }
 }
 function saveAndRender(message) {
   const saved = saveState();
@@ -451,6 +467,7 @@ function rateSession(form) {
 document.addEventListener('click', event => {
   const pageButton = event.target.closest('[data-page]');
   if (pageButton) {
+    setMobileMenuOpen(false, false);
     page = pageButton.dataset.page;
     if (page === 'profile') editingProfile = false;
     render();
@@ -462,7 +479,9 @@ document.addEventListener('click', event => {
   if (!button) return;
   const action = button.dataset.action;
   try {
-    if (action === 'match-mode') { matchMode = button.dataset.mode; render(); }
+    if (action === 'toggle-mobile-menu') setMobileMenuOpen(!mobileMenuOpen);
+    else if (action === 'close-mobile-menu') setMobileMenuOpen(false);
+    else if (action === 'match-mode') { matchMode = button.dataset.mode; render(); }
     else if (action === 'request-match') requestMatch(Number(button.dataset.index), button.dataset.mode);
     else if (action === 'switch-profile') { state.currentId = button.dataset.id; editingProfile = false; saveAndRender(`Now viewing ${currentStudent().name}’s profile.`); }
     else if (action === 'add-demo-data') ensureDemoData();
@@ -508,6 +527,10 @@ document.addEventListener('submit', event => {
       default: break;
     }
   } catch (error) { setToast(error.message || 'Please check the details and try again.'); }
+});
+
+document.addEventListener('keydown', event => {
+  if (event.key === 'Escape' && mobileMenuOpen) setMobileMenuOpen(false);
 });
 
 render();

@@ -33,7 +33,12 @@
 
     <div class="main-column">
       <header class="topbar">
-        <div class="topbar-title"><span class="eyebrow">CAMPUS COMMUNITY</span><strong id="page-title">Dashboard</strong></div>
+        <div class="topbar-leading">
+          <button class="mobile-menu-toggle" type="button" data-action="toggle-mobile-menu" aria-label="Open navigation menu" aria-controls="mobile-menu" aria-expanded="false">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 6h16M4 12h16M4 18h16"/></svg>
+          </button>
+          <div class="topbar-title"><span class="eyebrow">CAMPUS COMMUNITY</span><strong id="page-title">Dashboard</strong></div>
+        </div>
         <div class="topbar-tools"><span class="save-state" id="save-state"><i></i>Saved on this device</span><label class="profile-picker"><span class="sr-only">Active student profile</span><select id="profile-picker"></select></label></div>
       </header>
       <main id="main-content" tabindex="-1"></main>
@@ -41,13 +46,20 @@
     </div>
   </div>
 
-  <nav class="mobile-nav" aria-label="Main navigation">
-    <button data-page="dashboard"><span>⌂</span><small>Home</small></button>
-    <button data-page="matches"><span>✦</span><small>Partners</small></button>
-    <button data-page="skills"><span>▤</span><small>Skills</small></button>
-    <button data-page="sessions"><span>◷</span><small>Sessions</small></button>
-    <button data-page="profile"><span>◎</span><small>Profile</small></button>
-  </nav>
+  <div id="mobile-menu-layer" class="mobile-menu-layer" hidden>
+    <button class="mobile-menu-backdrop" type="button" data-action="close-mobile-menu" aria-label="Close navigation menu"></button>
+    <nav id="mobile-menu" class="mobile-menu" aria-label="Main navigation">
+      <div class="mobile-menu-heading"><span class="brand-mark">S</span><span><strong>SKILL SWAP</strong><small>Learn from each other</small></span><button class="mobile-menu-close" type="button" data-action="close-mobile-menu" aria-label="Close navigation menu">×</button></div>
+      <div class="mobile-menu-items">
+        <button data-page="dashboard"><span class="nav-icon">⌂</span><span>Dashboard</span></button>
+        <button data-page="matches"><span class="nav-icon">✦</span><span>Find partners</span></button>
+        <button data-page="skills"><span class="nav-icon">▤</span><span>My skills</span></button>
+        <button data-page="sessions"><span class="nav-icon">◷</span><span>Sessions</span></button>
+        <button data-page="profile"><span class="nav-icon">◎</span><span>Profile &amp; join</span></button>
+      </div>
+      <p class="mobile-menu-note">Profiles and sessions are saved on this device.</p>
+    </nav>
+  </div>
   <div id="toast" class="toast" role="status" aria-live="polite"></div>
   <div id="dialog-root"></div>
 </body>
