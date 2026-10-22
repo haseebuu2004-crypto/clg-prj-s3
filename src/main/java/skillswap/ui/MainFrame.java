@@ -353,10 +353,11 @@ public final class MainFrame extends JFrame {
         page.add(hero);
         page.add(Box.createVerticalStrut(18));
 
-        JPanel stats = new ResponsiveGridPanel(4, 13, 12);
+        JPanel stats = new ResponsiveGridPanel(5, 13, 12);
         stats.add(statCard("Skills to teach", String.valueOf(current.getOfferedSkills().size()), "Your strengths", Theme.BLUE));
         stats.add(statCard("Learning goals", String.valueOf(current.getWantedSkills().size()), "What you want to learn", Theme.TEAL));
         stats.add(statCard("Open sessions", String.valueOf(service.countUpcoming(currentStudentId)), "Pending or accepted", Theme.AMBER));
+        stats.add(statCard("Completed sessions", String.valueOf(service.countCompleted(currentStudentId)), "Learning exchanges completed", Theme.GREEN));
         int ratings = service.getRatingCount(currentStudentId);
         stats.add(statCard("Teaching rating", ratings == 0 ? "New" : String.format(Locale.ROOT, "%.1f ★", service.getAverageRating(currentStudentId)), ratings + " review" + (ratings == 1 ? "" : "s"), Theme.GREEN));
         page.add(stats);
@@ -516,10 +517,32 @@ public final class MainFrame extends JFrame {
             for (Exchange exchange : match.getExchanges()) {
                 String learner = service.getStudent(exchange.getLearnerId()).getName();
                 String teacher = service.getStudent(exchange.getTeacherId()).getName();
+                Skill offeredSkill = service.getStudent(exchange.getTeacherId()).getOffered(exchange.getSkillName());
+                Skill requestedSkill = service.getStudent(exchange.getLearnerId()).getWanted(exchange.getSkillName());
                 String line = learner.equals(currentStudent().getName()) ? "You learn " + exchange.getSkillName() + " from " + teacher
                         : teacher.equals(currentStudent().getName()) ? "You teach " + exchange.getSkillName() + " to " + learner
                         : learner + " learns " + exchange.getSkillName() + " from " + teacher;
+                if (offeredSkill != null && requestedSkill != null) {
+                    line += "  ·  " + offeredSkill.getProficiency().getLabel() + " offered / " + requestedSkill.getProficiency().getLabel() + " requested";
+                }
                 card.add(exchangeLine(line));
+            }
+            if (match.getType() == MatchResult.Type.DIRECT) {
+                String partnerId = match.getParticipantIds().stream().filter(id -> !id.equals(currentStudentId)).findFirst().orElse("");
+                Student partner = service.getStudent(partnerId);
+                String offers = partner.getOfferedSkills().stream().map(skill -> skill.getName() + " · " + skill.getProficiency().getLabel()).collect(Collectors.joining(", "));
+                String wants = partner.getWantedSkills().stream().map(skill -> skill.getName() + " · " + skill.getProficiency().getLabel()).collect(Collectors.joining(", "));
+                card.add(Box.createVerticalStrut(7));
+                card.add(wrapLabel(partner.getName() + " · Can teach: " + offers + " · Wants to learn: " + wants, Theme.MUTED, 11, Font.PLAIN));
+            } else {
+                String participantStats = match.getParticipantIds().stream().filter(id -> !id.equals(currentStudentId))
+                        .map(id -> {
+                            Student participant = service.getStudent(id);
+                            int ratingCount = service.getRatingCount(id);
+                            String rating = ratingCount == 0 ? "new rating" : String.format(Locale.ROOT, "%.1f ★ (%d reviews)", service.getAverageRating(id), ratingCount);
+                            return participant.getName() + " · " + rating + " · " + service.countCompleted(id) + " completed";
+                        }).collect(Collectors.joining("  |  "));
+                card.add(wrapLabel("Partner history · " + participantStats, Theme.MUTED, 11, Font.PLAIN));
             }
             card.add(Box.createVerticalStrut(12));
             JPanel actions = new JPanel(new FlowLayout(FlowLayout.LEFT, 9, 0));
@@ -537,8 +560,10 @@ public final class MainFrame extends JFrame {
             if (match.getType() == MatchResult.Type.DIRECT) {
                 String partnerId = match.getParticipantIds().stream().filter(id -> !id.equals(currentStudentId)).findFirst().orElse("");
                 Student partner = service.getStudent(partnerId);
-                String rating = service.getRatingCount(partnerId) == 0 ? "No ratings yet" : String.format(Locale.ROOT, "%.1f average · %d review(s)", service.getAverageRating(partnerId), service.getRatingCount(partnerId));
-                actions.add(label(partner.getName() + " · " + rating, Theme.MUTED, 11, Font.PLAIN));
+                int ratingCount = service.getRatingCount(partnerId);
+                String rating = ratingCount == 0 ? "No ratings yet" : String.format(Locale.ROOT, "%.1f average · %d review(s)", service.getAverageRating(partnerId), ratingCount);
+                long completed = service.getSessionsFor(partnerId).stream().filter(session -> session.getStatus() == Session.Status.COMPLETED).count();
+                actions.add(label(partner.getName() + " · " + rating + " · " + completed + " completed", Theme.MUTED, 11, Font.PLAIN));
             }
             card.add(actions);
             card.setAlignmentX(Component.LEFT_ALIGNMENT);
@@ -815,6 +840,17 @@ public final class MainFrame extends JFrame {
         skills.add(readOnlySkillCard("Can teach", student.getOfferedSkills()));
         skills.add(readOnlySkillCard("Wants to learn", student.getWantedSkills()));
         page.add(skills);
+        page.add(Box.createVerticalStrut(14));
+
+        List<Session> profileSessions = service.getSessionsFor(currentStudentId);
+        long teachingSessions = profileSessions.stream().filter(session -> session.getTeacherId().equals(currentStudentId)).count();
+        long learningSessions = profileSessions.stream().filter(session -> session.getLearnerId().equals(currentStudentId)).count();
+        JPanel activity = new ResponsiveGridPanel(3, 14, 12);
+        activity.add(statCard("Teaching sessions", String.valueOf(teachingSessions), "All statuses", Theme.BLUE));
+        activity.add(statCard("Learning sessions", String.valueOf(learningSessions), "All statuses", Theme.TEAL));
+        activity.add(statCard("Completed sessions", String.valueOf(service.countCompleted(currentStudentId)), "Saved learning history", Theme.GREEN));
+        page.add(sectionHeading("Learning activity", "Your teaching, learning, and completed exchanges"));
+        page.add(activity);
         page.add(Box.createVerticalStrut(14));
 
         JPanel registration = cardPanel();
