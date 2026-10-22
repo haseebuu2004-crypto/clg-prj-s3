@@ -24,6 +24,14 @@ The first launch creates demo profiles and session history. Data is saved atomic
 
 The Swing interface adapts to narrow, portrait-sized windows: the sidebar becomes a page selector, card grids stack into fewer columns, session/profile details switch to vertical layouts, and the registration form reflows while keeping controls readable and comfortably sized. This remains a desktop Java application; it is not packaged as an Android or iOS app.
 
+## Run Skill Swap on a phone
+
+The `web/` folder contains a mobile-first browser version of the main workflows: dashboard, direct and chain matching, skills, sessions, profile registration, and reviews. After GitHub Pages is enabled with **Settings → Pages → Source → GitHub Actions**, the workflow in `.github/workflows/deploy-mobile.yml` publishes it at:
+
+`https://haseebuu2004-crypto.github.io/clg-prj-s3/`
+
+Open that URL in a phone browser. On Android, use the browser menu's **Add to Home screen** option; on iPhone, use Safari's **Share → Add to Home Screen**. The web app saves profiles and sessions in that browser on that device. Browser data is separate from the Java desktop app's local file and is not synchronized between students' devices.
+
 ## Demo profiles
 
 | Student | Can teach | Wants to learn | Use in the demo |
